@@ -9,6 +9,7 @@ package com.mycompany.mavenproject1.estructuras;
  * @author gonzalo
  */
 
+
 import java.util.NoSuchElementException;
 
 public class CustomQueue<T> {

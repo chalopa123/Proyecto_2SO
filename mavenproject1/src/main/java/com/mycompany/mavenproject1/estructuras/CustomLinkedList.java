@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 public class CustomLinkedList<T> implements Iterable<T> {
-    private Nodo<T> head;
+    Nodo<T> head;
     private Nodo<T> tail;
     private int size;
 
