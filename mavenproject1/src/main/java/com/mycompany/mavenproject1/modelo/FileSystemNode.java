@@ -11,7 +11,7 @@ package com.mycompany.mavenproject1.modelo;
 
 
 import com.mycompany.mavenproject1.estructuras.CustomLinkedList;
-import com.ycompany.mavenproject1.procesos.Proceso;
+import com.mycompany.mavenproject1.procesos.Proceso;
 
 public abstract class FileSystemNode {
     private final String nombre;
