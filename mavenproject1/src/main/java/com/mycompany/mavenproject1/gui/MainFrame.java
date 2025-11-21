@@ -8,27 +8,23 @@ package com.mycompany.mavenproject1.gui;
  *
  * @author gonzalo
  */
-
 import com.mycompany.mavenproject1.core.FileSystemManager;
 import com.mycompany.mavenproject1.core.Simulador;
-import com.mycompany.mavenproject1.modelo.Archivo;
-import com.mycompany.mavenproject1.modelo.Directorio;
-import com.mycompany.mavenproject1.modelo.FileSystemNode;
-import com.mycompany.mavenproject1.procesos.PoliticaPlanificacion;
-import com.mycompany.mavenproject1.procesos.Proceso;
+import com.mycompany.mavenproject1.modelo.*;
+import com.mycompany.mavenproject1.procesos.*;
+import com.mycompany.mavenproject1.persistencia.GestorPersistencia;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.NoSuchElementException;
+import java.io.IOException;
 
 public class MainFrame extends JFrame {
-    
-    // Atributos de Swing (declarados por el diseñador)
+
+    // Componentes
     private JTree treeArchivos;
     private JTable tableAsignacion;
     private JTable tableProcesos;
@@ -36,44 +32,172 @@ public class MainFrame extends JFrame {
     private JComboBox<PoliticaPlanificacion> comboPolitica;
     private JTextField textPath;
     private JTextField textSize;
-    private JButton btnCrearArchivo, btnCrearDir, btnEliminar;
-    // ... otros componentes
-
+    private JButton btnCrearArchivo, btnCrearDir, btnEliminar, btnGuardar, btnCargar;
+    private JRadioButton radioAdmin, radioUsuario;
+    
+    // Modelos
+    private DefaultTableModel modeloTablaArchivos;
+    private DefaultTableModel modeloTablaProcesos;
+    
     private final Simulador simulador;
     private final FileSystemManager fsManager;
+    private final GestorPersistencia gestorPersistencia;
 
     public MainFrame() {
-        initComponents(); // Método generado por NetBeans
         this.simulador = Simulador.getInstance();
         this.fsManager = FileSystemManager.getInstance();
-        this.simulador.setGui(this); 
+        this.gestorPersistencia = new GestorPersistencia();
+        this.simulador.setGui(this);
+
+        initComponents(); 
+        configurarEventos();
         
         iniciarTimerSimulacion();
         recargarTodo();
-        
-        // Configurar el dibujado del disco
-        panelDisco.setLayout(new BorderLayout());
-        panelDisco.add(new DiskPanel(fsManager.getDisco(), simulador.planificador), BorderLayout.CENTER);
-        
-        // Llenar el ComboBox
-        for (PoliticaPlanificacion p : PoliticaPlanificacion.values()) {
-            comboPolitica.addItem(p);
-        }
     }
-    
-    // Método simulado
+
     private void initComponents() {
-        // Inicialización de componentes...
+        setTitle("Simulador SO - FileSystem (Proyecto 2)");
+        setSize(1200, 700);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout(10, 10));
+
+        // --- Panel Superior (Controles) ---
+        JPanel panelTop = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        
+        // Modos de Usuario 
+        ButtonGroup groupMode = new ButtonGroup();
+        radioAdmin = new JRadioButton("Administrador", true);
+        radioUsuario = new JRadioButton("Usuario");
+        groupMode.add(radioAdmin);
+        groupMode.add(radioUsuario);
+        
+        panelTop.add(new JLabel("Modo:"));
+        panelTop.add(radioAdmin);
+        panelTop.add(radioUsuario);
+        
+        panelTop.add(new JSeparator(SwingConstants.VERTICAL));
+        
+        // Inputs
+        textPath = new JTextField("/home/archivo.txt", 15);
+        textSize = new JTextField("5", 3);
+        btnCrearArchivo = new JButton("Crear Archivo");
+        btnCrearDir = new JButton("Crear Dir");
+        btnEliminar = new JButton("Eliminar Sel.");
+        
+        panelTop.add(new JLabel("Path:"));
+        panelTop.add(textPath);
+        panelTop.add(new JLabel("Tamaño (Bloques):"));
+        panelTop.add(textSize);
+        panelTop.add(btnCrearArchivo);
+        panelTop.add(btnCrearDir);
+        panelTop.add(btnEliminar);
+        
+        // Políticas
+        comboPolitica = new JComboBox<>(PoliticaPlanificacion.values());
+        panelTop.add(new JLabel("Planificador:"));
+        panelTop.add(comboPolitica);
+
+        // Persistencia [cite: 68]
+        btnGuardar = new JButton("Guardar");
+        btnCargar = new JButton("Cargar");
+        panelTop.add(btnGuardar);
+        panelTop.add(btnCargar);
+
+        add(panelTop, BorderLayout.NORTH);
+
+        // --- Panel Central (Split Pane) ---
+        JSplitPane splitCentral = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        
+        // Izquierda: Árbol [cite: 25]
+        treeArchivos = new JTree();
+        JScrollPane scrollTree = new JScrollPane(treeArchivos);
+        scrollTree.setPreferredSize(new Dimension(250, 0));
+        scrollTree.setBorder(BorderFactory.createTitledBorder("Estructura de Directorios"));
+        splitCentral.setLeftComponent(scrollTree);
+        
+        // Derecha: Tabs (Disco, Tablas)
+        JTabbedPane tabs = new JTabbedPane();
+        
+        // Tab 1: Disco [cite: 31]
+        panelDisco = new DiskPanel(fsManager.getDisco(), Simulador.getInstance().planificador); // Usar clase interna DiskPanel
+        JScrollPane scrollDisco = new JScrollPane(panelDisco);
+        tabs.addTab("Visualización Disco", scrollDisco);
+        
+        // Tab 2: Tabla Asignación [cite: 58]
+        modeloTablaArchivos = new DefaultTableModel(new String[]{"Archivo", "Bloques", "Inicio", "PID"}, 0);
+        tableAsignacion = new JTable(modeloTablaArchivos);
+        tabs.addTab("Tabla de Asignación", new JScrollPane(tableAsignacion));
+        
+        // Tab 3: Procesos [cite: 21]
+        modeloTablaProcesos = new DefaultTableModel(new String[]{"PID", "Estado", "Operación", "Path"}, 0);
+        tableProcesos = new JTable(modeloTablaProcesos);
+        tabs.addTab("Cola de Procesos", new JScrollPane(tableProcesos));
+        
+        splitCentral.setRightComponent(tabs);
+        add(splitCentral, BorderLayout.CENTER);
+    }
+
+    private void configurarEventos() {
+        // Crear Archivo
+        btnCrearArchivo.addActionListener(e -> {
+            try {
+                String path = textPath.getText();
+                int size = Integer.parseInt(textSize.getText());
+                simulador.crearProcesoSimulado(OperacionCRUD.CREAR, path, size);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Tamaño debe ser un número entero.");
+            }
+        });
+
+        // Crear Directorio
+        btnCrearDir.addActionListener(e -> {
+             // Simulamos creación de directorio como proceso size 0 (o implementación directa)
+             // Para el simulador, usaremos CREAR con size 0 y path terminado en / o manejado internamente
+             String path = textPath.getText();
+             // Simplificación: Llamada directa o proceso especial. 
+             // El PDF implica que todo pasa por procesos.
+             simulador.crearProcesoSimulado(OperacionCRUD.CREAR, path, 0); 
+        });
+
+        // Eliminar
+        btnEliminar.addActionListener(e -> {
+             DefaultMutableTreeNode node = (DefaultMutableTreeNode) treeArchivos.getLastSelectedPathComponent();
+             if (node == null) return;
+             // Reconstruir path (simplificado)
+             String path = "/" + node.getUserObject().toString(); // Esto requiere mejor lógica de path completo
+             simulador.crearProcesoSimulado(OperacionCRUD.ELIMINAR, textPath.getText(), 0);
+        });
+        
+        // Cambio de Política 
+        comboPolitica.addActionListener(e -> {
+            Simulador.getInstance().planificador.setPolitica((PoliticaPlanificacion) comboPolitica.getSelectedItem());
+        });
+
+        // Lógica Admin/Usuario 
+        ActionListener modeListener = e -> {
+            boolean isAdmin = radioAdmin.isSelected();
+            btnCrearArchivo.setEnabled(isAdmin);
+            btnCrearDir.setEnabled(isAdmin);
+            btnEliminar.setEnabled(isAdmin);
+            // Usuario solo puede leer (botones deshabilitados)
+        };
+        radioAdmin.addActionListener(modeListener);
+        radioUsuario.addActionListener(modeListener);
+        
+        // Persistencia
+        btnGuardar.addActionListener(e -> {
+            try {
+                gestorPersistencia.guardarEstado(fsManager, "filesystem.json");
+                JOptionPane.showMessageDialog(this, "Guardado correctamente.");
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     public void iniciarTimerSimulacion() {
-        // 1 segundo por "tick"
-        new javax.swing.Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                simulador.tickSimulacion();
-            }
-        }).start();
+        new Timer(1000, e -> simulador.tickSimulacion()).start();
     }
 
     public void recargarTodo() {
@@ -83,7 +207,7 @@ public class MainFrame extends JFrame {
         panelDisco.repaint();
     }
 
-    // --- Recarga del Árbol de Archivos ---
+    // Lógica del JTree
     public void recargarArbol() {
         Directorio rootModelo = fsManager.getRoot();
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootModelo.getNombre());
@@ -92,107 +216,46 @@ public class MainFrame extends JFrame {
     }
 
     private void construirNodos(DefaultMutableTreeNode nodoSwing, Directorio dirModelo) {
+        // Como CustomLinkedList es Iterable (según tu código), usamos for-each
         for (FileSystemNode hijo : dirModelo.getHijos()) {
             DefaultMutableTreeNode hijoNode = new DefaultMutableTreeNode(hijo.getNombre());
             nodoSwing.add(hijoNode);
-
-            if (hijo instanceof Directorio dirHijo) {
-                construirNodos(hijoNode, dirHijo);
+            if (hijo instanceof Directorio) {
+                construirNodos(hijoNode, (Directorio) hijo);
             }
         }
     }
 
-    // --- Recarga de Tabla de Asignación ---
     public void recargarTablaAsignacion() {
-        DefaultTableModel model = (DefaultTableModel) tableAsignacion.getModel();
-        model.setRowCount(0); // Limpiar
-
-        recorrerYAnadirArchivos(fsManager.getRoot(), model);
+        modeloTablaArchivos.setRowCount(0);
+        recorrerYAnadirArchivos(fsManager.getRoot());
     }
     
-    private void recorrerYAnadirArchivos(Directorio dir, DefaultTableModel model) {
+    private void recorrerYAnadirArchivos(Directorio dir) {
         for (FileSystemNode hijo : dir.getHijos()) {
-            if (hijo instanceof Archivo archivo) {
-                model.addRow(new Object[]{
-                    archivo.getNombre(), 
-                    archivo.getTamanoEnBloques(), 
-                    archivo.getPrimerBloque(), 
-                    archivo.getProcesoCreador().PID
+            if (hijo instanceof Archivo) {
+                Archivo a = (Archivo) hijo;
+                modeloTablaArchivos.addRow(new Object[]{
+                    a.getNombre(), a.getTamanoEnBloques(), a.getPrimerBloque(), a.getProcesoCreador().PID
                 });
-            } else if (hijo instanceof Directorio dirHijo) {
-                recorrerYAnadirArchivos(dirHijo, model);
+            } else if (hijo instanceof Directorio) {
+                recorrerYAnadirArchivos((Directorio) hijo);
             }
         }
     }
 
-    // --- Recarga de Tabla de Procesos ---
     public void recargarTablaProcesos() {
-        DefaultTableModel model = (DefaultTableModel) tableProcesos.getModel();
-        model.setRowCount(0); // Limpiar
-
-        // Procesos en LISTO
-        for (Proceso p : simulador.getColaListos().listaInterna) {
-             model.addRow(new Object[]{p.PID, p.estado, p.operacionAsociada, p.path});
+        modeloTablaProcesos.setRowCount(0);
+        // Acceso directo a las listas internas (recuerda hacerlas public en CustomQueue)
+        if (simulador.getColaListos().listaInterna != null) {
+             for (Proceso p : simulador.getColaListos().listaInterna) {
+                 modeloTablaProcesos.addRow(new Object[]{p.PID, p.estado, p.operacionAsociada, p.path});
+             }
         }
-        // Procesos en BLOQUEADO
-        for (Proceso p : simulador.getColaBloqueados().listaInterna) {
-             model.addRow(new Object[]{p.PID, p.estado, p.operacionAsociada, p.path});
-        }
-        // Nota: Procesos TERMINADO no se muestran a menos que se use una lista de procesos completa.
-    }
-    
-    // --- Lógica de Eventos (Simulada) ---
-    private void btnCrearArchivoActionPerformed(ActionEvent evt) {
-        String path = textPath.getText();
-        int size = Integer.parseInt(textSize.getText());
-        simulador.crearProcesoSimulado(com.unimet.so.procesos.OperacionCRUD.CREAR, path, size);
-    }
-    
-    // ... otros ActionListeners ...
-}
-
-// --- Clase interna para dibujar el disco ---
-class DiskPanel extends JPanel {
-    private final Disco disco;
-    private final PlanificadorDisco planificador;
-    private final int BLOCK_SIZE = 15;
-    private final int BLOCKS_PER_ROW = 10;
-
-    public DiskPanel(Disco disco, PlanificadorDisco planificador) {
-        this.disco = disco;
-        this.planificador = planificador;
-        setPreferredSize(new Dimension(BLOCK_SIZE * BLOCKS_PER_ROW + 1, (int) Math.ceil((double) disco.totalBloques / BLOCKS_PER_ROW) * BLOCK_SIZE + 20));
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        
-        g.drawString("Cabeza: " + planificador.getPosicionCabeza(), 5, BLOCK_SIZE * BLOCKS_PER_ROW + 15);
-
-        for (int i = 0; i < disco.totalBloques; i++) {
-            int row = i / BLOCKS_PER_ROW;
-            int col = i % BLOCKS_PER_ROW;
-            int x = col * BLOCK_SIZE;
-            int y = row * BLOCK_SIZE;
-
-            if (disco.bloques[i].estaLibre) {
-                g.setColor(Color.GREEN.darker());
-            } else {
-                // Color por proceso
-                int pid = disco.bloques[i].pidProceso;
-                g.setColor(new Color((pid * 100) % 256, (pid * 50) % 256, (pid * 150) % 256));
-            }
-
-            g.fillRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
-            g.setColor(Color.BLACK);
-            g.drawRect(x, y, BLOCK_SIZE, BLOCK_SIZE);
-
-            // Resaltar la posición de la cabeza
-            if (i == planificador.getPosicionCabeza()) {
-                g.setColor(Color.YELLOW);
-                g.drawRect(x + 1, y + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
-            }
+        if (simulador.getColaBloqueados().listaInterna != null) {
+             for (Proceso p : simulador.getColaBloqueados().listaInterna) {
+                 modeloTablaProcesos.addRow(new Object[]{p.PID, p.estado, p.operacionAsociada, p.path});
+             }
         }
     }
 }

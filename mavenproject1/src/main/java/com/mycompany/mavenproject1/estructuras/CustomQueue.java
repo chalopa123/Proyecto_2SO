@@ -13,7 +13,7 @@ package com.mycompany.mavenproject1.estructuras;
 import java.util.NoSuchElementException;
 
 public class CustomQueue<T> {
-    private final CustomLinkedList<T> listaInterna;
+    public final CustomLinkedList<T> listaInterna;
 
     public CustomQueue() {
         this.listaInterna = new CustomLinkedList<>();
