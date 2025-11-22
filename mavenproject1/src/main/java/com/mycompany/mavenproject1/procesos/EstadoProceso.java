@@ -1,0 +1,22 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.mavenproject1.procesos;
+
+/**
+ *
+ * @author gonzalo
+ */
+
+public enum EstadoProceso {
+    NUEVO, LISTO, EJECUTANDO, BLOQUEADO, TERMINADO
+}
+
+enum OperacionCRUD {
+    CREAR, LEER, ACTUALIZAR, ELIMINAR
+}
+
+enum PoliticaPlanificacion {
+    FIFO, SSTF, SCAN, CSCAN
+}
