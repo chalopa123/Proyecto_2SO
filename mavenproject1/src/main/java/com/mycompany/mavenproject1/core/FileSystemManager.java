@@ -11,7 +11,8 @@ package com.mycompany.mavenproject1.core;
 
 import com.mycompany.mavenproject1.modelo.*;
 import com.mycompany.mavenproject1.procesos.Proceso;
-import com.mycompany.mavenproject1.cache.BufferCache; // Asumiendo que existe la clase
+import com.mycompany.mavenproject1.cache.BufferCache;
+import com.mycompany.mavenproject1.estructuras.CustomLinkedList;
 
 import java.util.NoSuchElementException;
 

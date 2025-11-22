@@ -12,6 +12,8 @@ package com.mycompany.mavenproject1.core;
 import com.mycompany.mavenproject1.estructuras.CustomQueue;
 import com.mycompany.mavenproject1.procesos.*;
 import com.mycompany.mavenproject1.gui.MainFrame;
+import com.mycompany.mavenproject1.modelo.FileSystemNode;
+import com.mycompany.mavenproject1.modelo.Archivo;
 
 import java.util.NoSuchElementException;
 
