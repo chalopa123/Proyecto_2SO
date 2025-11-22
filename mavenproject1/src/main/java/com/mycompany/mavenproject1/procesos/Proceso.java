@@ -28,19 +28,3 @@ public class Proceso {
     
     // Getters (para simplificar, no se usan en el ejemplo)
 }
-
-class SolicitudES {
-    public final Proceso procesoOrigen;
-    public final OperacionCRUD tipoOperacion;
-    public final String path;
-    public final int tamano;
-    public final int targetBlock; // Bloque físico objetivo; -1 si es CREAR
-
-    public SolicitudES(Proceso p, OperacionCRUD tipo, String path, int tamano, int targetBlock) {
-        this.procesoOrigen = p;
-        this.tipoOperacion = tipo;
-        this.path = path;
-        this.tamano = tamano;
-        this.targetBlock = targetBlock;
-    }
-}

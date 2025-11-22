@@ -130,4 +130,5 @@ public class Simulador {
     // Getters para la GUI
     public CustomQueue<Proceso> getColaListos() { return colaListos; }
     public CustomQueue<Proceso> getColaBloqueados() { return colaBloqueados; }
+    public PlanificadorDisco getPlanificador() { return planificador; }
 }
