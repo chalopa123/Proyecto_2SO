@@ -1,0 +1,17 @@
+# Archivos compilados y carpetas de construcción (Maven)
+target/
+*.class
+
+# Archivos específicos de usuario de NetBeans (¡IMPORTANTE!)
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Archivos de sistema y otros IDEs (por si acaso)
+.DS_Store
+.idea/
+*.iml
+*.log
