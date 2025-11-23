@@ -9,6 +9,6 @@ package com.mycompany.mavenproject1.procesos;
  * @author gonzalo
  */
 
-public enum EstadoProceso {
-    NUEVO, LISTO, EJECUTANDO, BLOQUEADO, TERMINADO
+public enum OperacionCRUD {
+    CREAR, LEER, ACTUALIZAR, ELIMINAR
 }
