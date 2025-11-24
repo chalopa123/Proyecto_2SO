@@ -7,14 +7,15 @@ package com.mycompany.mavenproject1.core;
 /**
  *
  * @author gonzalo
+ * @author adrian
  */
 
 import com.mycompany.mavenproject1.modelo.*;
 import com.mycompany.mavenproject1.procesos.Proceso;
 import com.mycompany.mavenproject1.cache.BufferCache;
 import com.mycompany.mavenproject1.estructuras.CustomLinkedList;
+import com.mycompany.mavenproject1.estructuras.Nodo;
 
-import java.util.NoSuchElementException;
 
 public class FileSystemManager {
     private static FileSystemManager instance;
@@ -45,8 +46,12 @@ public class FileSystemManager {
     // --- Helpers de Navegación ---
     public FileSystemNode findNode(String path) {
         if (path == null || path.equals("/")) return root;
+        
+        String cleanPath = path.startsWith("/") ? path.substring(1) : path;
+        
+        if (cleanPath.isEmpty()) return root;
 
-        String[] partes = path.substring(1).split("/");
+        String[] partes = cleanPath.split("/");
         FileSystemNode actual = root;
 
         for (String nombre : partes) {
@@ -64,7 +69,7 @@ public class FileSystemManager {
 
     public boolean crearArchivo(String path, int tamano, Proceso p) {
         if (disco.getBloquesLibres() < tamano) {
-            System.out.println("Fallo al crear: No hay suficientes bloques libres.");
+            System.out.println("ERROR: No hay suficientes bloques libres.");
             return false;
         }
 
@@ -73,8 +78,22 @@ public class FileSystemManager {
         String nombreArchivo = path.substring(ultimoSlash + 1);
 
         FileSystemNode nodoPadre = findNode(pathPadre);
-        if (!(nodoPadre instanceof Directorio padre)) return false; // Padre no encontrado o es Archivo
-
+        if (nodoPadre == null) {
+            System.out.println("ERROR: El directorio padre no existe: " + pathPadre);
+            return false;
+        }
+        if (!(nodoPadre instanceof Directorio)) {
+            System.out.println("ERROR: La ruta padre no es un directorio: " + pathPadre);
+            return false;
+        }
+        
+        Directorio padre = (Directorio) nodoPadre;
+        
+        if (padre.findHijo(nombreArchivo) != null) {
+             System.out.println("ERROR: Ya existe un archivo/directorio con el nombre: " + nombreArchivo);
+             return false;
+        }
+        
         int primerBloque = -1;
         int bloqueAnterior = -1;
 
@@ -96,17 +115,27 @@ public class FileSystemManager {
 
         Archivo archivo = new Archivo(nombreArchivo, padre, tamano, primerBloque, p);
         padre.addHijo(archivo);
+        
+        System.out.println("ÉXITO: Archivo creado en " + path);
         return true;
     }
 
     public boolean eliminarArchivo(String path) {
         FileSystemNode nodoAEliminar = findNode(path);
-        if (!(nodoAEliminar instanceof Archivo archivo)) return false;
-
+        
+        if (nodoAEliminar == null) {
+            System.out.println("ERROR: Archivo no encontrado: " + path);
+            return false;
+        }
+        if (!(nodoAEliminar instanceof Archivo archivo)) {
+             System.out.println("ERROR: La ruta no corresponde a un archivo.");
+             return false;
+        }
+        
         int actual = archivo.getPrimerBloque();
         while (actual != -1) {
             // Usa el BufferCache para leer (aunque en un caso real se necesitaría la dirección física)
-            Block b = bufferCache.leerBloque(actual, disco); 
+            Block b = disco.getBlock(actual); 
             int siguiente = b.siguienteBloque;
             disco.freeBlock(actual);
             actual = siguiente;
@@ -125,34 +154,62 @@ public class FileSystemManager {
         String nombreDir = path.substring(ultimoSlash + 1);
 
         FileSystemNode nodoPadre = findNode(pathPadre);
-        if (!(nodoPadre instanceof Directorio padre)) return false;
-
+        if (nodoPadre == null) {
+             System.out.println("ERROR: Ruta padre no existe: " + pathPadre);
+             return false;
+        }
+        
+        if (!(nodoPadre instanceof Directorio padre)) {
+             System.out.println("ERROR: El padre no es un directorio.");
+             return false;
+        }
+        
+        if (padre.findHijo(nombreDir) != null) {
+             System.out.println("ERROR: Ya existe " + nombreDir);
+             return false;
+        }        
+        
         Directorio nuevoDir = new Directorio(nombreDir, padre);
         padre.addHijo(nuevoDir);
+        System.out.println("ÉXITO: Directorio creado " + path);
         return true;
     }
     
     public boolean eliminarDirectorio(String path) {
+        if (path.equals("/")) {
+            System.out.println("ERROR: No se puede eliminar la raíz.");
+            return false;
+        }
+        
+        
         FileSystemNode nodoAEliminar = findNode(path);
         if (!(nodoAEliminar instanceof Directorio dir)) return false;
 
-        // Implementación recursiva para liberar el contenido
+        // Primero recolectamos los nombres de los hijos en una lista temporal auxiliar
+        // O iteramos manualmente sobre la lista enlazada original.
+        
         CustomLinkedList<FileSystemNode> hijos = dir.getHijos();
-        // Usar una copia o iterador seguro si se modifica la lista
-        CustomLinkedList<FileSystemNode> copiaHijos = new CustomLinkedList<>();
-        for (FileSystemNode hijo : hijos) {
-            copiaHijos.addLast(hijo);
-        }
+        
+        // Iteramos manualmente usando tu clase Nodo
+        // Asumiendo que CustomLinkedList tiene un método getCabeza() que retorna Nodo<FileSystemNode>
+        Nodo<FileSystemNode> actual = hijos.getCabeza(); 
+        
+        while (actual != null) {
+            FileSystemNode hijo = actual.getValor();
+            // Guardamos el siguiente ANTES de llamar recursivamente, 
+            // porque al eliminar el hijo la estructura de la lista podría cambiar.
+            Nodo<FileSystemNode> siguienteNodo = actual.getSiguiente(); 
 
-        for (FileSystemNode hijo : copiaHijos) {
             String hijoPath = path + "/" + hijo.getNombre();
+            
             if (hijo instanceof Archivo) {
                 eliminarArchivo(hijoPath);
             } else if (hijo instanceof Directorio) {
                 eliminarDirectorio(hijoPath);
             }
+            
+            actual = siguienteNodo;
         }
-        
         // Finalmente, eliminar el directorio del padre
         Directorio padre = dir.getPadre();
         if (padre != null) {
