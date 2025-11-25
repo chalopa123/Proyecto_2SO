@@ -5,10 +5,11 @@
 package com.mycompany.mavenproject1.modelo;
 
 /**
- *
+ * @author adrian
  * @author gonzalo
  */
 import com.mycompany.mavenproject1.estructuras.CustomLinkedList;
+import com.mycompany.mavenproject1.estructuras.Nodo;
 
 public class Directorio extends FileSystemNode {
     private final CustomLinkedList<FileSystemNode> hijos;
@@ -23,19 +24,33 @@ public class Directorio extends FileSystemNode {
     }
 
     public boolean removeHijo(String nombre) {
-        for (FileSystemNode hijo : hijos) {
+        Nodo<FileSystemNode> actual = hijos.getCabeza();
+        
+        while (actual != null) {
+            FileSystemNode hijo = actual.getValor();
+            
             if (hijo.getNombre().equals(nombre)) {
+                //CustomLinkedList tiene un método remove que acepta el objeto
                 return hijos.remove(hijo);
             }
+            actual = actual.getSiguiente();
         }
         return false;
     }
 
     public FileSystemNode findHijo(String nombre) {
-        for (FileSystemNode hijo : hijos) {
+        // Recorrido manual sin usar Iterator
+        Nodo<FileSystemNode> actual = hijos.getCabeza();
+        
+        while (actual != null) {
+            FileSystemNode hijo = actual.getValor(); // Obtener el objeto del nodo
+            
+            // Comparar nombres
             if (hijo.getNombre().equals(nombre)) {
                 return hijo;
             }
+            
+            actual = actual.getSiguiente(); // Avanzar al siguiente nodo
         }
         return null;
     }

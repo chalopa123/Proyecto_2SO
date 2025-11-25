@@ -10,6 +10,7 @@
 
 package com.mycompany.mavenproject1.estructuras;
 
+import com.mycompany.mavenproject1.modelo.FileSystemNode;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -118,6 +119,10 @@ public class CustomLinkedList<T> implements Iterable<T> {
                 return data;
             }
         };
+    }
+
+    public Nodo<FileSystemNode> getCabeza() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }
 
