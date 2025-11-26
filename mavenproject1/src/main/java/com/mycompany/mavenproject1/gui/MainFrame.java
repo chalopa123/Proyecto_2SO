@@ -137,7 +137,7 @@ public class MainFrame extends JFrame {
             try {
                 String path = textPath.getText();
                 int size = Integer.parseInt(textSize.getText());
-                simulador.crearProcesoSimulado(OperacionCRUD.CREAR_DIR, path, size);
+                simulador.crearProcesoSimulado(OperacionCRUD.CREAR, path, size);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Tamaño debe ser un número entero.");
             }
@@ -145,7 +145,7 @@ public class MainFrame extends JFrame {
 
         btnCrearDir.addActionListener(e -> {
              String path = textPath.getText();
-             simulador.crearProcesoSimulado(OperacionCRUD.CREAR, path, 0); 
+             simulador.crearProcesoSimulado(OperacionCRUD.CREAR_DIR, path, 0); 
         });
 
         btnEliminar.addActionListener(e -> {
