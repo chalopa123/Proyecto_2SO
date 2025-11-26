@@ -63,7 +63,8 @@ public class Simulador {
 
             // Generar Solicitud de E/S
             int targetBlock = -1;
-            if (pEjecutando.operacionAsociada != OperacionCRUD.CREAR) {
+            if (pEjecutando.operacionAsociada != OperacionCRUD.CREAR &&
+                pEjecutando.operacionAsociada != OperacionCRUD.CREAR_DIR) {
                 FileSystemNode nodo = fsManager.findNode(pEjecutando.path);
                 if (nodo instanceof Archivo archivo) {
                     targetBlock = archivo.getPrimerBloque();
@@ -114,12 +115,22 @@ public class Simulador {
     private void ejecutarOperacionFS(SolicitudES s) {
         boolean exito = switch (s.tipoOperacion) {
             case CREAR -> fsManager.crearArchivo(s.path, s.tamano, s.procesoOrigen);
-            case ELIMINAR -> fsManager.eliminarArchivo(s.path);
+            case CREAR_DIR -> fsManager.crearDirectorio(s.path);
+            case ELIMINAR -> {
+                //Verificar si es directorio para llamar al método correcto
+                FileSystemNode nodo = fsManager.findNode(s.path);
+                if (nodo instanceof com.mycompany.mavenproject1.modelo.Directorio) {
+                    yield fsManager.eliminarDirectorio(s.path);
+                } else {
+                    yield fsManager.eliminarArchivo(s.path);
+                }
+            }
             case LEER, ACTUALIZAR -> { 
                 // Operaciones simples de E/S, solo simulan el acceso
                 System.out.println("Proceso " + s.procesoOrigen.PID + " leyó/actualizó " + s.path);
                 yield true;
             }
+            default -> false;
         };
 
         if (!exito) {
