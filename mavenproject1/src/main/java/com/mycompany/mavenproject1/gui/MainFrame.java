@@ -149,8 +149,47 @@ public class MainFrame extends JFrame {
         });
 
         btnEliminar.addActionListener(e -> {
-             DefaultMutableTreeNode node = (DefaultMutableTreeNode) treeArchivos.getLastSelectedPathComponent();
-             if (node == null) return;
+            // Obtener el nodo seleccionado visualmente
+            javax.swing.tree.DefaultMutableTreeNode node = 
+                (javax.swing.tree.DefaultMutableTreeNode) treeArchivos.getLastSelectedPathComponent();
+
+            if (node == null) {
+                JOptionPane.showMessageDialog(this, "Por favor, selecciona un elemento del árbol.");
+                return;
+            }
+
+            // Construir el String del path (ej: "/home/archivo.txt")
+            // Obtenemos el "camino" desde la raíz hasta el nodo seleccionado
+            javax.swing.tree.TreePath selectionPath = treeArchivos.getSelectionPath();
+            Object[] pathParts = selectionPath.getPath();
+
+            StringBuilder fullPath = new StringBuilder();
+
+            for (Object part : pathParts) {
+                String nombreNodo = part.toString();
+
+                // Lógica para armar el path correctamente:
+                // Si el nodo es la raíz "/" no le ponemos slash antes.
+                // Si es otro nodo, le ponemos "/" antes.
+                if (!nombreNodo.equals("/")) {
+                    fullPath.append("/").append(nombreNodo);
+                }
+            }
+
+            // Si el string quedó vacío es porque seleccionaron la raíz "/"
+            if (fullPath.length() == 0) {
+                fullPath.append("/");
+            }
+
+            String pathFinal = fullPath.toString();
+
+            // Validar que no intenten borrar la raíz
+            if (pathFinal.equals("/")) {
+                JOptionPane.showMessageDialog(this, "No puedes eliminar el directorio raíz.");
+                return;
+            } 
+            
+            // Enviar la solicitud al simulador con el path correcto
              simulador.crearProcesoSimulado(OperacionCRUD.ELIMINAR, textPath.getText(), 0);
         });
         
