@@ -98,6 +98,10 @@ public class CustomLinkedList<T> implements Iterable<T> {
         return size;
     }
     
+    public Nodo<T> getCabeza() {
+        return this.head; // O como hayas llamado a tu variable 'head' o 'first'
+    }
+    
     // O(1) para empezar la iteración
     @Override
     public Iterator<T> iterator() {
@@ -121,8 +125,6 @@ public class CustomLinkedList<T> implements Iterable<T> {
         };
     }
 
-    public Nodo<FileSystemNode> getCabeza() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
+    
 }
 

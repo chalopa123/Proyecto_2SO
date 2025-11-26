@@ -4,7 +4,7 @@
  */
 
 /**
- *
+ *@author adrian
  * @author gonzalo
  */
 package com.mycompany.mavenproject1.estructuras;
@@ -20,11 +20,6 @@ public class Nodo<T> {
         this.siguiente = null;
     }
 
-    public FileSystemNode getValor() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    public Nodo<FileSystemNode> getSiguiente() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
+    public T getValor() { return data; } // o getData()
+    public Nodo<T> getSiguiente() { return siguiente; } // o getNext()
 }
