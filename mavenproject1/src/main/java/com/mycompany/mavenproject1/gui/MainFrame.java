@@ -233,7 +233,6 @@ public class MainFrame extends JFrame {
     }
 
     public void recargarTodo() {
-        recargarArbol();
         recargarTablaAsignacion();
         recargarTablaProcesos();
         if (panelDisco != null) panelDisco.repaint();
@@ -244,6 +243,13 @@ public class MainFrame extends JFrame {
         DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootModelo.getNombre());
         construirNodos(rootNode, rootModelo);
         treeArchivos.setModel(new DefaultTreeModel(rootNode));
+        expandirArbol();
+    }
+    
+    public void expandirArbol() {
+        for (int i = 0; i < treeArchivos.getRowCount(); i++) {
+            treeArchivos.expandRow(i);
+        }
     }
 
     private void construirNodos(DefaultMutableTreeNode nodoSwing, Directorio dirModelo) {

@@ -132,6 +132,15 @@ public class Simulador {
             }
             default -> false;
         };
+        
+        if (exito && gui != null && 
+            (s.tipoOperacion == OperacionCRUD.CREAR || 
+             s.tipoOperacion == OperacionCRUD.CREAR_DIR || 
+             s.tipoOperacion == OperacionCRUD.ELIMINAR)) {
+
+             gui.recargarArbol();
+        }
+        
 
         if (!exito) {
             System.err.println("Fallo la operación " + s.tipoOperacion + " en " + s.path);
