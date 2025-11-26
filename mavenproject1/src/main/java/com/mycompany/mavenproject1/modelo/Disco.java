@@ -5,7 +5,7 @@
 package com.mycompany.mavenproject1.modelo;
 
 /**
- *
+ * @author adrian
  * @author gonzalo
  */
 
@@ -43,21 +43,19 @@ public class Disco {
         return -1;
     }
 
-    public void freeBlock(int blockIndex) {
-        Block b = bloques[blockIndex];
-        if (!b.estaLibre) {
-            b.estaLibre = true;
-            b.pidProceso = -1;
-            b.siguienteBloque = -1;
-            bloquesLibres++;
+    public void freeBlock(int index) {
+        if (index >= 0 && index < bloques.length) {
+        bloques[index].estaLibre = true;
+        bloques[index].pidProceso = -1; // O 0, según como manejes "nadie"
+        bloques[index].siguienteBloque = -1;
         }
     }
 
     public Block getBloque(int index) {
-        if (index < 0 || index >= totalBloques) {
-            return null;
+        if (index >= 0 && index < bloques.length) {
+            return bloques[index];
         }
-        return bloques[index];
+        return null;
     }
 
     public void linkBlocks(int blockIndex, int nextBlockIndex) {
