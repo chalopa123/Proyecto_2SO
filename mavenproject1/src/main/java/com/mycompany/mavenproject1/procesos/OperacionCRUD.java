@@ -5,10 +5,10 @@
 package com.mycompany.mavenproject1.procesos;
 
 /**
- *
+ * @author adrian
  * @author gonzalo
  */
 
 public enum OperacionCRUD {
-    CREAR, LEER, ACTUALIZAR, ELIMINAR
+    CREAR, CREAR_DIR, LEER, ACTUALIZAR, ELIMINAR
 }

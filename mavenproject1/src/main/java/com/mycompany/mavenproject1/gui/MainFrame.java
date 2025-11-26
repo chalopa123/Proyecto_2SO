@@ -5,7 +5,7 @@
 package com.mycompany.mavenproject1.gui;
 
 /**
- *
+ * @author adrian
  * @author gonzalo
  */
 
@@ -137,7 +137,7 @@ public class MainFrame extends JFrame {
             try {
                 String path = textPath.getText();
                 int size = Integer.parseInt(textSize.getText());
-                simulador.crearProcesoSimulado(OperacionCRUD.CREAR, path, size);
+                simulador.crearProcesoSimulado(OperacionCRUD.CREAR_DIR, path, size);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Tamaño debe ser un número entero.");
             }

@@ -5,7 +5,7 @@
 package com.mycompany.mavenproject1.core;
 
 /**
- *
+ * @author adrian
  * @author gonzalo
  */
 
