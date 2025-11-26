@@ -69,7 +69,10 @@ public class Disco {
         return bloquesLibres;
     }
 
-    public Block getBlock(int actual) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public Block getBlock(int index) {
+        if (index >= 0 && index < bloques.length) {
+        return bloques[index];
+        }
+        return null;
     }
 }
